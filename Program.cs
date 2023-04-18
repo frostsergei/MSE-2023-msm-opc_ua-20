@@ -6,8 +6,7 @@ using Logika.Comms.Protocols;
 using System.Text;
 using Logika.Comms.Protocols.SPBus;
 
-void m4_protocol_test_request()//печатает значение одного из тэгов прибора
-{
+void m4_protocol_test_request() {//печатает значение одного из тэгов прибора
     Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     TCPConnection first_level = new TCPConnection(30000, "91.209.59.238.", 8002);
     M4Protocol second_level = new M4Protocol();
@@ -15,7 +14,9 @@ void m4_protocol_test_request()//печатает значение одного 
     first_level.Open();
     byte[] connection_dump;
     string test_meter_model;
-    Meter test_meter = Protocol.detectM4(second_level, out connection_dump, out test_meter_model);
+    string model;
+    int Rate;
+    Meter test_meter = Protocol.AutodetectSPT(first_level, BaudRate.Undefined, 30000, true, false, false, null, null, out connection_dump, out Rate, out model);
     Console.WriteLine(test_meter);
     DataTagDef def = test_meter.FindTag("ОБЩ", "Д");
     DataTag request = new DataTag(def, 0);
