@@ -24,6 +24,7 @@ void m4_protocol_test_request() {//печатает значение одног�
     DataTag request = new DataTag(def, 0);
     second_level.UpdateTags(null, M4Protocol.BROADCAST, new DataTag[] { request });
     Console.WriteLine(request);
+    first_level.Close();
 }
 
 void SPBus_protocol_test_request() { //печатает значение одного из тэгов прибора
@@ -41,7 +42,7 @@ void SPBus_protocol_test_request() { //печатает значение одн�
     DataTag request = new DataTag(def, 0);
     second_level.UpdateTags(5, 0, new DataTag[] { request });
     Console.WriteLine(request);
-
+    first_level.Close();
 }
 
 //SPBus_protocol_test_request();
