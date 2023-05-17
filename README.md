@@ -1,10 +1,3 @@
-# MSE-2023-template
-Шаблонный проект для гитхаба на курсе Промышленная разработка ПО
+# LogikaUI
 
-## Полезные ссылки по проекту 
-(каждый проект заполняет под себя):
-  - [База знаний по проекту](https://miro.com/app/board/uXjVPjK_iOw=/?share_link_id=115273625923)
-  - 
-
-
-Добавили результат своей работы 
+Note: you need to setup postgresql server and configure credentials for connection in project files (ViewModels/DevicesViewModel.cs)
