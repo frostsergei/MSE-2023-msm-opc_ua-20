@@ -7,8 +7,8 @@
              x:Class="LogikaUI.Pages.DevicesView"
              x:DataType="viewModels:DevicesViewModel">
     <UserControl.Styles>
-        <Style Selector="">
-            
+        <Style Selector="DataGrid">
+            <Setter Property="Background" Value="#DDEEFF"/>
         </Style>
     </UserControl.Styles>
     <Design.DataContext>
@@ -17,47 +17,38 @@
     <DockPanel>
         <Button DockPanel.Dock="Bottom"
                 Command="{Binding LoadDevices}">Load devices</Button>
-        <TextBlock
-            DockPanel.Dock="Top"
-            Margin="10"
-            FontSize="20"
-            HorizontalAlignment="Center"
-            FontWeight="Bold"
-            Content="{TemplateBinding Header}"/>
         <Border
             Margin="10"
-            Padding="10 30"
-            CornerRadius="30"
-            Background="Honeydew">
-                <ScrollViewer
-                    HorizontalContentAlignment="Left"
-                    HorizontalScrollBarVisibility="Auto"
-                    VerticalScrollBarVisibility="Auto">
-                    <ItemsControl 
-                            Items="{Binding Devices}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel
-                                    Orientation="Horizontal">
-                                    <TextBlock
-                                        Margin="20 0 0 0"
-                                        FontSize="15"
-                                        FontWeight="Bold"
-                                        Text="{Binding Id}"/>
-                                    <TextBlock 
-                                        Margin="20 0 0 0"
-                                        FontSize="15"
-                                        Text="{Binding Name}"/>
-                                    <TextBlock 
-                                        Margin="20 0 0 0"
-                                        FontSize="11"
-                                        Foreground="Gray"
-                                        Text="{Binding Description}"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+            CornerRadius="10">
+                <Grid>
+                    <DataGrid
+                        Name="MainTable"
+                        SelectionChanged="DataGrid_OnSelectionChanged"
+                        Items="{Binding Devices} ">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn 
+                                IsReadOnly="True"
+                                Header="ID" 
+                                Binding="{Binding Id}">
+                            </DataGridTextColumn>
+                            <DataGridTextColumn
+                                IsReadOnly="True"
+                                Header="Name" 
+                                Binding="{Binding Name}">
+                            </DataGridTextColumn>
+                            <DataGridTextColumn
+                                IsReadOnly="True"
+                                Header="Description" 
+                                Binding="{Binding Description}">
+                            </DataGridTextColumn>
+                            <DataGridTextColumn
+                                IsReadOnly="True"
+                                Header="Type" 
+                                Binding="{Binding Type}">
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
         </Border>
     </DockPanel>
 </UserControl>

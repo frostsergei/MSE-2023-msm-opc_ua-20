@@ -20,7 +20,16 @@ build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 [/home/skygrel19/RiderProjects/LogikaUI/LogikaUI/HamburgerMenu/HamburgerMenu.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
+[/home/skygrel19/RiderProjects/LogikaUI/LogikaUI/Pages/Connection.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
 [/home/skygrel19/RiderProjects/LogikaUI/LogikaUI/Pages/DevicesView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/skygrel19/RiderProjects/LogikaUI/LogikaUI/Pages/L4TagsView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/skygrel19/RiderProjects/LogikaUI/LogikaUI/Pages/X6TagsView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
 [/home/skygrel19/RiderProjects/LogikaUI/LogikaUI/Views/MainView.axaml]

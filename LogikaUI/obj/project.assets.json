@@ -2,10 +2,10 @@
   "version": 3,
   "targets": {
     "net7.0": {
-      "Avalonia/0.10.18": {
+      "Avalonia/0.10.19": {
         "type": "package",
         "dependencies": {
-          "Avalonia.Remote.Protocol": "0.10.18",
+          "Avalonia.Remote.Protocol": "0.10.19",
           "JetBrains.Annotations": "10.3.0",
           "System.ComponentModel.Annotations": "4.5.0",
           "System.Memory": "4.5.3",
@@ -147,11 +147,11 @@
           }
         }
       },
-      "Avalonia.Controls.DataGrid/0.10.18": {
+      "Avalonia.Controls.DataGrid/0.10.19": {
         "type": "package",
         "dependencies": {
-          "Avalonia": "0.10.18",
-          "Avalonia.Remote.Protocol": "0.10.18",
+          "Avalonia": "0.10.19",
+          "Avalonia.Remote.Protocol": "0.10.19",
           "JetBrains.Annotations": "10.3.0",
           "System.Reactive": "5.0.0"
         },
@@ -262,7 +262,7 @@
           }
         }
       },
-      "Avalonia.Remote.Protocol/0.10.18": {
+      "Avalonia.Remote.Protocol/0.10.19": {
         "type": "package",
         "compile": {
           "lib/netstandard2.0/Avalonia.Remote.Protocol.dll": {
@@ -1494,16 +1494,16 @@
     }
   },
   "libraries": {
-    "Avalonia/0.10.18": {
-      "sha512": "hA7US1I75f+ztOyqFWXdzkyJDU9FxcMktfmnmey2uPb+9Cn2GSTU+/7t08CMAyMxuCBpWjlOwkdCZh1cPFWHpg==",
+    "Avalonia/0.10.19": {
+      "sha512": "KgT8O+uE9sZdsjr2J5VQo+55raPeQAhdiHjSic300P3EJMsjjdjC132O0ERGRWf7OSDcskqnDstnuop0fMGhLg==",
       "type": "package",
-      "path": "avalonia/0.10.18",
+      "path": "avalonia/0.10.19",
       "hasTools": true,
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "Icon.png",
-        "avalonia.0.10.18.nupkg.sha512",
+        "avalonia.0.10.19.nupkg.sha512",
         "avalonia.nuspec",
         "build/Avalonia.props",
         "build/Avalonia.targets",
@@ -1640,15 +1640,15 @@
         "runtimes/win7-x86/native/av_libglesv2.dll"
       ]
     },
-    "Avalonia.Controls.DataGrid/0.10.18": {
-      "sha512": "LDNZxnzk++GgBeUKsqmeWJDQgF83C4Quk4Wn0z5P6vIm1f5YSSFJL6JbibbIAvjqlGjqWWFTBZpHMUNjdyw4Aw==",
+    "Avalonia.Controls.DataGrid/0.10.19": {
+      "sha512": "s1xlpkkjyC2cVHI/ZY57GRvTsYVk+qPs+qQPYa88ehH5WcMyvgQjKu8SvzVjLSegMKb28NJO7b203Zu3NoDC4A==",
       "type": "package",
-      "path": "avalonia.controls.datagrid/0.10.18",
+      "path": "avalonia.controls.datagrid/0.10.19",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "Icon.png",
-        "avalonia.controls.datagrid.0.10.18.nupkg.sha512",
+        "avalonia.controls.datagrid.0.10.19.nupkg.sha512",
         "avalonia.controls.datagrid.nuspec",
         "lib/netstandard2.0/Avalonia.Controls.DataGrid.dll",
         "lib/netstandard2.0/Avalonia.Controls.DataGrid.xml"
@@ -1725,15 +1725,15 @@
         "lib/netstandard2.0/Avalonia.ReactiveUI.xml"
       ]
     },
-    "Avalonia.Remote.Protocol/0.10.18": {
-      "sha512": "YRymqWJWBDTM+o1CRs5ymAXQpd26erystkyavPgk10bWR4o3D657yFp0oCdfJek2Eba+agazcbZEmB8rdO8eiA==",
+    "Avalonia.Remote.Protocol/0.10.19": {
+      "sha512": "DjwS7k4tNzvEHvqnQqO0YT/mc2Z/gpFllHqN6kr+yoVIrXOKZegvwDl3dwpD/zXXP0Q4oMcZJFn1H36ZeO0wtQ==",
       "type": "package",
-      "path": "avalonia.remote.protocol/0.10.18",
+      "path": "avalonia.remote.protocol/0.10.19",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "Icon.png",
-        "avalonia.remote.protocol.0.10.18.nupkg.sha512",
+        "avalonia.remote.protocol.0.10.19.nupkg.sha512",
         "avalonia.remote.protocol.nuspec",
         "lib/netstandard2.0/Avalonia.Remote.Protocol.dll",
         "lib/netstandard2.0/Avalonia.Remote.Protocol.xml"
@@ -4719,7 +4719,8 @@
   },
   "projectFileDependencyGroups": {
     "net7.0": [
-      "Avalonia >= 0.10.18",
+      "Avalonia >= 0.10.19",
+      "Avalonia.Controls.DataGrid >= 0.10.19",
       "Avalonia.Desktop >= 0.10.18",
       "Avalonia.Diagnostics >= 0.10.18",
       "Avalonia.ReactiveUI >= 0.10.18",
@@ -4766,7 +4767,11 @@
         "dependencies": {
           "Avalonia": {
             "target": "Package",
-            "version": "[0.10.18, )"
+            "version": "[0.10.19, )"
+          },
+          "Avalonia.Controls.DataGrid": {
+            "target": "Package",
+            "version": "[0.10.19, )"
           },
           "Avalonia.Desktop": {
             "target": "Package",

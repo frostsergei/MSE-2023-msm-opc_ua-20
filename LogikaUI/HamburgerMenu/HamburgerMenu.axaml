@@ -60,6 +60,12 @@
                                   ItemTemplate="{TemplateBinding ItemTemplate}"
                                   Items="{TemplateBinding Items}"
                                   ItemsPanel="{TemplateBinding ItemsPanel}">
+                    <ItemsPresenter.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <StackPanel x:Name="HamburgerItemsPanel"
+                                    Margin="0,2" Orientation="Vertical" />
+                      </ItemsPanelTemplate>
+                    </ItemsPresenter.ItemsPanel>
                   </ItemsPresenter>
                 </ScrollViewer>
                 <Button x:Name="SettingsButton"

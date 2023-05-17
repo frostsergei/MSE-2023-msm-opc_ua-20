@@ -1,0 +1,63 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:LogikaUI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="LogikaUI.Pages.ConnectionView"
+             x:DataType="viewModels:ConnectionViewModel">
+    <UserControl.Styles>
+        <Style Selector="DataGrid">
+            <Setter Property="Background" Value="#DDEEFF"/>
+        </Style>
+    </UserControl.Styles>
+    <Design.DataContext>
+        <viewModels:DevicesViewModel/>
+    </Design.DataContext>
+    <DockPanel>
+        <Button DockPanel.Dock="Bottom"
+                
+                IsEnabled="{Binding Port, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                Height="60"
+                VerticalContentAlignment="Center"
+                HorizontalContentAlignment="Center"
+                Command="{Binding Connect}">
+            Connect
+        </Button>
+        <Border
+            IsVisible="{Binding !IsConnected}">
+            <StackPanel
+                Margin="20">
+                <TextBlock>Ip address:</TextBlock>
+                <TextBox
+                    Name="IpAddressField"
+                    MinWidth="200"
+                    Text="{Binding IpAddress, Mode=TwoWay}"/>
+                <TextBlock Margin = "0 20 0 0">Port:</TextBlock>
+                <TextBox
+                    Name="PortField"
+                    MinWidth="200"
+                    Text="{Binding Port, Mode=TwoWay}"/>
+            </StackPanel>
+        </Border>
+        <Border
+            IsVisible="{Binding IsConnected}"
+            Margin="10"
+            CornerRadius="10">
+            <Grid>
+                    <DataGrid
+                        Name="MainTable"
+                        SelectionChanged="DataGrid_OnSelectionChanged"
+                        Items="{Binding Devices} ">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn 
+                                IsReadOnly="True"
+                                Header="ID" 
+                                Binding="{Binding Id}">
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+        </Border>
+    </DockPanel>
+</UserControl>

@@ -1,0 +1,74 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:LogikaUI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="LogikaUI.Pages.L4TagsView"
+             x:DataType="viewModels:L4TagsViewModel">
+    <UserControl.Styles>
+        <Style Selector="DataGrid">
+            <Setter Property="Background" Value="#DDEEFF"/>
+        </Style>
+    </UserControl.Styles>
+    <Design.DataContext>
+        <viewModels:DevicesViewModel/>
+    </Design.DataContext>
+    <DockPanel>
+        <Button DockPanel.Dock="Bottom"
+            Command="{Binding LoadTags}">Load devices</Button>
+        <Border
+            Margin="10"
+            CornerRadius="10">
+                <Grid>
+                    <DataGrid
+                        Name="MainTable"
+                        SelectionChanged="DataGrid_OnSelectionChanged"
+                        Items="{Binding Tags} ">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn 
+                                IsReadOnly="True"
+                                Header="ID" 
+                                Binding="{Binding Id}">
+                            </DataGridTextColumn>
+                            <DataGridTextColumn
+                                IsReadOnly="True"
+                                Header="Device" 
+                                Binding="{Binding Device}">
+                            </DataGridTextColumn>
+                            <DataGridTextColumn
+                                IsReadOnly="True"
+                                Header="Channel" 
+                                Binding="{Binding Channel}">
+                            </DataGridTextColumn>
+                            <DataGridTextColumn
+                                IsReadOnly="True"
+                                Header="Ordinal" 
+                                Binding="{Binding Ordinal}">
+                            </DataGridTextColumn>
+                            <DataGridTextColumn
+                                IsReadOnly="True"
+                                Header="Kind" 
+                                Binding="{Binding Kind}">
+                            </DataGridTextColumn>
+                            <DataGridTextColumn
+                                IsReadOnly="True"
+                                Header="Basic" 
+                                Binding="{Binding Basic}">
+                            </DataGridTextColumn>
+                            <DataGridTextColumn
+                                IsReadOnly="True"
+                                Header="DataType" 
+                                Binding="{Binding DataType}">
+                            </DataGridTextColumn>
+                            <DataGridTextColumn
+                                IsReadOnly="True"
+                                Header="Description" 
+                                Binding="{Binding Description}">
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+        </Border>
+    </DockPanel>
+</UserControl>

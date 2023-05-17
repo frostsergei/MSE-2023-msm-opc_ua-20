@@ -7,8 +7,17 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="LogikaUI.Views.MainView">
     <hamburgerMenu:HamburgerMenu Name="Sidebar">
+      <TabItem Header="Connection">
+        <pages:ConnectionView />
+      </TabItem>
       <TabItem Header="Devices">
         <pages:DevicesView />
+      </TabItem>
+      <TabItem Header="X6Tags">
+        <pages:X6TagsView />
+      </TabItem>
+      <TabItem Header="L4Tags">
+        <pages:L4TagsView />
       </TabItem>
       <FlyoutBase.AttachedFlyout>
         <Flyout>

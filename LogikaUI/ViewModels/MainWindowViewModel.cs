@@ -4,5 +4,4 @@ namespace LogikaUI.ViewModels;
 
 public class MainWindowViewModel : ViewModelBase
 {
-    
 }
