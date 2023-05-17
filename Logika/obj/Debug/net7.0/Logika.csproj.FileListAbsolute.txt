@@ -1,0 +1,15 @@
+/home/skygrel19/RiderProjects/MSE-2023-msm-opc_ua-20/Logika/obj/Debug/net7.0/Logika.csproj.AssemblyReference.cache
+/home/skygrel19/RiderProjects/MSE-2023-msm-opc_ua-20/Logika/obj/Debug/net7.0/Logika.Meters.Resources.resources
+/home/skygrel19/RiderProjects/MSE-2023-msm-opc_ua-20/Logika/obj/Debug/net7.0/Logika.csproj.GenerateResource.cache
+/home/skygrel19/RiderProjects/MSE-2023-msm-opc_ua-20/Logika/obj/Debug/net7.0/Logika.GeneratedMSBuildEditorConfig.editorconfig
+/home/skygrel19/RiderProjects/MSE-2023-msm-opc_ua-20/Logika/obj/Debug/net7.0/Logika.AssemblyInfoInputs.cache
+/home/skygrel19/RiderProjects/MSE-2023-msm-opc_ua-20/Logika/obj/Debug/net7.0/Logika.AssemblyInfo.cs
+/home/skygrel19/RiderProjects/MSE-2023-msm-opc_ua-20/Logika/obj/Debug/net7.0/Logika.csproj.CoreCompileInputs.cache
+/home/skygrel19/RiderProjects/MSE-2023-msm-opc_ua-20/Logika/bin/Debug/net7.0/Logika.dll.config
+/home/skygrel19/RiderProjects/MSE-2023-msm-opc_ua-20/Logika/bin/Debug/net7.0/Logika.deps.json
+/home/skygrel19/RiderProjects/MSE-2023-msm-opc_ua-20/Logika/bin/Debug/net7.0/Logika.dll
+/home/skygrel19/RiderProjects/MSE-2023-msm-opc_ua-20/Logika/bin/Debug/net7.0/Logika.pdb
+/home/skygrel19/RiderProjects/MSE-2023-msm-opc_ua-20/Logika/obj/Debug/net7.0/Logika.dll
+/home/skygrel19/RiderProjects/MSE-2023-msm-opc_ua-20/Logika/obj/Debug/net7.0/refint/Logika.dll
+/home/skygrel19/RiderProjects/MSE-2023-msm-opc_ua-20/Logika/obj/Debug/net7.0/Logika.pdb
+/home/skygrel19/RiderProjects/MSE-2023-msm-opc_ua-20/Logika/obj/Debug/net7.0/ref/Logika.dll

@@ -51,4 +51,8 @@
         <SubType>Code</SubType>
       </Compile>
     </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Logika\Logika.csproj" />
+    </ItemGroup>
 </Project>
