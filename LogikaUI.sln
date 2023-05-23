@@ -2,7 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogikaUI", "LogikaUI\LogikaUI.csproj", "{2E540C8B-BFAA-4860-BBD8-1C04F5D4A7EB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Logika", "Logika\Logika.csproj", "{FFCAA83E-5E37-44AC-BB82-16CC633D3129}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConnection", "TestConnection\TestConnection.csproj", "{6AE58F86-6EE6-484E-AC0E-C4A2134235D6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Logika", "Logika\Logika.csproj", "{9BDBDD28-547C-4A7E-9FA4-AC8FAEC9B056}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -14,9 +16,13 @@ Global
 		{2E540C8B-BFAA-4860-BBD8-1C04F5D4A7EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2E540C8B-BFAA-4860-BBD8-1C04F5D4A7EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2E540C8B-BFAA-4860-BBD8-1C04F5D4A7EB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FFCAA83E-5E37-44AC-BB82-16CC633D3129}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FFCAA83E-5E37-44AC-BB82-16CC633D3129}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FFCAA83E-5E37-44AC-BB82-16CC633D3129}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FFCAA83E-5E37-44AC-BB82-16CC633D3129}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6AE58F86-6EE6-484E-AC0E-C4A2134235D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6AE58F86-6EE6-484E-AC0E-C4A2134235D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6AE58F86-6EE6-484E-AC0E-C4A2134235D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6AE58F86-6EE6-484E-AC0E-C4A2134235D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9BDBDD28-547C-4A7E-9FA4-AC8FAEC9B056}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BDBDD28-547C-4A7E-9FA4-AC8FAEC9B056}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BDBDD28-547C-4A7E-9FA4-AC8FAEC9B056}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BDBDD28-547C-4A7E-9FA4-AC8FAEC9B056}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

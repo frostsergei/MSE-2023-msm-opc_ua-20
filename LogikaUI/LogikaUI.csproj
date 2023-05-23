@@ -17,13 +17,12 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="0.10.19" />
-        <PackageReference Include="Avalonia.Controls.DataGrid" Version="0.10.19" />
-        <PackageReference Include="Avalonia.Desktop" Version="0.10.18" />
+        <PackageReference Include="Avalonia" Version="0.10.21" />
+        <PackageReference Include="Avalonia.Controls.DataGrid" Version="0.10.21" />
+        <PackageReference Include="Avalonia.Desktop" Version="0.10.21" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="0.10.18" />
-        <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.18" />
-        <PackageReference Include="Npgsql" Version="7.0.4" />
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="0.10.21" />
+        <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.21" />
         <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
     </ItemGroup>
 
@@ -38,11 +37,7 @@
       <Compile Update="HamburgerMenu\HamburgerMenu.cs">
         <DependentUpon>HamburgerMenu.axaml</DependentUpon>
       </Compile>
-      <Compile Update="Pages\X6TagsView.axaml.cs">
-        <DependentUpon>X6TagsView.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Pages\L4TagsView.axaml.cs">
+      <Compile Update="Pages\TagsView.axaml.cs">
         <DependentUpon>L4TagsView.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>

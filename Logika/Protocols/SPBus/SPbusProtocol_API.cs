@@ -241,11 +241,13 @@ namespace Logika.Comms.Protocols.SPBus
             return start <= tPtr;
         }
 
-        public override Meter GetMeterType(byte? srcNT, byte? dstNT)
+        public override Meter GetMeterType(byte? srcNT, byte? dstNT, out object extraData)
         {
             readTags(srcNT, dstNT, "", new int[] { 0 }, new int[] { 99 }, out string[] va, out string[] eua);
             string p099 = va[0];
-            return SPBusProtocol.MeterTypeFromResponse(p099, out string model);
+            Meter m = SPBusProtocol.MeterTypeFromResponse(p099, out string model);
+            extraData = model;
+            return m;
         }
     }
 }

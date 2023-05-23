@@ -295,9 +295,12 @@ namespace Logika.Comms.Protocols.M4
         }
         class Logika4MArchiveRequestState
         {
-            internal DateTime tPtr;
             internal ArchiveDef4M arDef;
             internal ArchiveFieldDef4M[] fieldDefs;
+
+            internal int? currentChannel;   //для 943r3 архив приходится читать по отдельно по ТВ1 и ТВ2, потом склеивать. 944 же имеет один архив по каналу 0, несмотря на наличие 2 вводов
+            internal int nChRecsRead;                    //счётчик прочитанных записей по текущему каналу, для расчёта прогресса
+            internal DateTime tPtr;   
         }
 
         public override IntervalArchive ReadIntervalArchiveDef(Meter m, byte? srcNt, byte? dstNt, ArchiveType arType, out object state)
@@ -507,72 +510,89 @@ namespace Logika.Comms.Protocols.M4
 
             return new Logika4LArchiveRequestState(tvsa);            
         }
+        
+        void fixIntvTimestamp(M4ArchiveRecord r, ArchiveType art, MeterInstance mtd)
+        {
+            if (r.dt == DateTime.MinValue) {  //отсутствует полная метка времени - необходимо прибавить к отметке интервала расчетные день и час
+                if (art == ArchiveType.Hour)
+                    r.dt = r.intervalMark;
+                else if (art == ArchiveType.Day || art == ArchiveType.Control)
+                    r.dt = r.intervalMark.AddHours(mtd.RH);
+                else if (art == ArchiveType.Month)
+                    r.dt = r.intervalMark.AddDays(mtd.RD - 1).AddHours(mtd.RH);
+                else
+                    throw new Exception("fixIntvTimestamp: неподдерживаемый тип архива");
+            }
+        }
+        
+        M4ArchiveId getArCode(ArchiveType at)
+        {
+            if (at == ArchiveType.Hour)
+                return M4ArchiveId.Hour;
+            else if (at == ArchiveType.Day)
+                return M4ArchiveId.Day;
+            else if (at == ArchiveType.Month)
+                return M4ArchiveId.Mon;
+            else if (at == ArchiveType.Control)
+                return M4ArchiveId.Ctrl;
+            else
+                throw new Exception("getArCode: неподдерживаемый тип архива");
+        }
 
         bool readIntervalArchive4M(Logika4M m, byte? nt, IntervalArchive ar, DateTime start, DateTime end, ref object state, out float progress)
         {
             MeterInstance mtd = getMeterInstance(m as Logika4, nt);
             Logika4MArchiveRequestState rs = (Logika4MArchiveRequestState)state;
 
+            M4ArchiveId archiveCode = getArCode(ar.ArchiveType);
+
             int chStart = rs.arDef.ChannelDef.Start;
             int chEnd = rs.arDef.ChannelDef.Start + rs.arDef.ChannelDef.Count - 1;
+            if (!rs.currentChannel.HasValue) {
+                rs.currentChannel = chStart;
+                rs.nChRecsRead = 0;
+            }
 
-            DateTime[] nextPtrs = new DateTime[rs.arDef.ChannelDef.Count];
+            //for (int ch = chStart; ch <= chEnd; ch++) {     
+            //внимание: по разным каналам прибор может вернуть разное количество записей (при одинаковом интервале в запросе)
+            //поэтому теперь каналы читаем по очереди
+
             DateTime tStart = rs.tPtr != DateTime.MinValue ? rs.tPtr : start;
 
-            M4ArchiveId archiveCode;
-            if (ar.ArchiveType == ArchiveType.Hour)
-                archiveCode = M4ArchiveId.Hour;
-            else if (ar.ArchiveType == ArchiveType.Day)
-                archiveCode = M4ArchiveId.Day;
-            else if (ar.ArchiveType == ArchiveType.Month)
-                archiveCode = M4ArchiveId.Mon;
-            else if (ar.ArchiveType == ArchiveType.Control)
-                archiveCode = M4ArchiveId.Ctrl;
-            else
-                throw new Exception("unsupported archive type");
+            this.readArchiveM4(m, nt, 0, ArchivePartition, (byte)rs.currentChannel.Value, archiveCode, tStart, end, 64, out M4ArchiveRecord[] data, out DateTime nextPtr);
 
-            for (int ch = chStart; ch <= chEnd; ch++) {
+            foreach (M4ArchiveRecord r in data) {
+                fixIntvTimestamp(r, ar.ArchiveType, mtd);
 
-                this.readArchiveM4(m, nt, 0, ArchivePartition, (byte)ch, archiveCode, tStart, end, 64, out M4ArchiveRecord[] data, out DateTime nextPtr);
+                DataRow row = ar.Table.Rows.Find(r.dt);
+                if (row == null)
+                    row = ar.Table.Rows.Add(r.dt);
+                object[] oa = row.ItemArray;
 
-                foreach (M4ArchiveRecord r in data) {
-                    if (r.dt == DateTime.MinValue) {  //отсутствует полная метка времени - необходимо прибавить к отметке интервала расчетные день и час
-                        if (ar.ArchiveType == ArchiveType.Hour)
-                            r.dt = r.intervalMark;
-                        else if (ar.ArchiveType == ArchiveType.Day || ar.ArchiveType == ArchiveType.Control)
-                            r.dt = r.intervalMark.AddHours(mtd.RH);
-                        else if (ar.ArchiveType == ArchiveType.Month)
-                            r.dt = r.intervalMark.AddDays(mtd.RD - 1).AddHours(mtd.RH);
-                        else
-                            throw new Exception("unsupported archive");
-                    }
+                int idst = 1 + rs.fieldDefs.Length * (rs.currentChannel.Value - chStart);
+                Array.Copy(r.values, 0, oa, idst, r.values.Length);
 
-                    DataRow row = ar.Table.Rows.Find(r.dt);
-                    if (row == null)
-                        row = ar.Table.Rows.Add(r.dt);
-                    object[] oa = row.ItemArray;
+                row.ItemArray = oa;
+                rs.nChRecsRead++;
+            }
+            
+            DateTime dataStart = ar.Table.Rows.Count > 0 ? (DateTime)ar.Table.Rows[0].ItemArray[0] : start;
+            int intvCount = (int)((end - dataStart).Ticks / ar.ArchiveType.Interval.Ticks);
+            int totalIntervalsPerCh = Math.Min(rs.arDef.Capacity, intvCount);
+            int totalRecParts = totalIntervalsPerCh * rs.arDef.ChannelDef.Count;
+            int nParts = (rs.currentChannel.Value - chStart) * totalIntervalsPerCh + rs.nChRecsRead;            
+            progress = (float)Math.Min(100, 100.0 * nParts / totalRecParts);
 
-                    int idst = 1 + rs.fieldDefs.Length * (ch - chStart);
-                    Array.Copy(r.values, 0, oa, idst, r.values.Length);
+            rs.tPtr = nextPtr;
 
-                    row.ItemArray = oa;
-                }
-                nextPtrs[ch - chStart] = nextPtr;
+            if (nextPtr == DateTime.MinValue || nextPtr > end) {
+                rs.tPtr = DateTime.MinValue;
+                rs.nChRecsRead = 0;
+                rs.currentChannel++;                                
             }
 
-            DateTime tPtr = DateTime.MinValue;
-            foreach (DateTime np in nextPtrs) {
-                if (np != DateTime.MinValue && np > tPtr)
-                    tPtr = np;
-            }
-
-            DateTime firstRecTime = ar.Table.Rows.Count > 0 ? (DateTime)ar.Table.Rows[0][0] : start;
-            progress = (float)Math.Min(100, tPtr == DateTime.MinValue ? 100 : (tPtr - firstRecTime).TotalSeconds * 100 / (end - firstRecTime).TotalSeconds);
-
-            bool moreData = tPtr != DateTime.MinValue && tPtr < end;
-            rs.tPtr = tPtr;
-
-            return moreData;
+            bool hasMoreData = rs.currentChannel <= chEnd && rs.tPtr <= end;
+            return hasMoreData;
         }
 
         public override bool ReadServiceArchive(Meter m, byte? srcNt, byte? nt, ServiceArchive ar, DateTime start, DateTime end, ref object state, out float progress)

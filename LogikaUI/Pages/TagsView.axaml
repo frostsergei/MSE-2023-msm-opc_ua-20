@@ -4,8 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:LogikaUI.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="LogikaUI.Pages.L4TagsView"
-             x:DataType="viewModels:L4TagsViewModel">
+             x:Class="LogikaUI.Pages.TagsView"
+             x:DataType="viewModels:TagsViewModel">
     <UserControl.Styles>
         <Style Selector="DataGrid">
             <Setter Property="Background" Value="#DDEEFF"/>
@@ -15,8 +15,15 @@
         <viewModels:DevicesViewModel/>
     </Design.DataContext>
     <DockPanel>
-        <Button DockPanel.Dock="Bottom"
-            Command="{Binding LoadTags}">Load devices</Button>
+        <ComboBox DockPanel.Dock="Top"
+                  SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}"
+                  Items="{Binding Items}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Caption}"></TextBlock>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
         <Border
             Margin="10"
             CornerRadius="10">
@@ -26,45 +33,30 @@
                         SelectionChanged="DataGrid_OnSelectionChanged"
                         Items="{Binding Tags} ">
                         <DataGrid.Columns>
-                            <DataGridTextColumn 
-                                IsReadOnly="True"
-                                Header="ID" 
-                                Binding="{Binding Id}">
-                            </DataGridTextColumn>
                             <DataGridTextColumn
                                 IsReadOnly="True"
-                                Header="Device" 
-                                Binding="{Binding Device}">
-                            </DataGridTextColumn>
-                            <DataGridTextColumn
-                                IsReadOnly="True"
-                                Header="Channel" 
-                                Binding="{Binding Channel}">
-                            </DataGridTextColumn>
-                            <DataGridTextColumn
-                                IsReadOnly="True"
-                                Header="Ordinal" 
-                                Binding="{Binding Ordinal}">
-                            </DataGridTextColumn>
-                            <DataGridTextColumn
-                                IsReadOnly="True"
-                                Header="Kind" 
+                                Header="Kind"
                                 Binding="{Binding Kind}">
                             </DataGridTextColumn>
                             <DataGridTextColumn
                                 IsReadOnly="True"
-                                Header="Basic" 
-                                Binding="{Binding Basic}">
+                                Header="DescriptionEx"
+                                Binding="{Binding DescriptionEx}">
                             </DataGridTextColumn>
                             <DataGridTextColumn
                                 IsReadOnly="True"
-                                Header="DataType" 
-                                Binding="{Binding DataType}">
+                                Header="Range"
+                                Binding="{Binding Range}">
                             </DataGridTextColumn>
                             <DataGridTextColumn
                                 IsReadOnly="True"
-                                Header="Description" 
-                                Binding="{Binding Description}">
+                                Header="isBasicParam"
+                                Binding="{Binding isBasicParam}">
+                            </DataGridTextColumn>
+                            <DataGridTextColumn
+                                IsReadOnly="True"
+                                Header="UpdateRate"
+                                Binding="{Binding UpdateRate}">
                             </DataGridTextColumn>
                         </DataGrid.Columns>
                     </DataGrid>

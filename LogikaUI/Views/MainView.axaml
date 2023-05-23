@@ -13,11 +13,8 @@
       <TabItem Header="Devices">
         <pages:DevicesView />
       </TabItem>
-      <TabItem Header="X6Tags">
-        <pages:X6TagsView />
-      </TabItem>
-      <TabItem Header="L4Tags">
-        <pages:L4TagsView />
+      <TabItem Header="Tags">
+        <pages:TagsView Name="TagsView_tab" />
       </TabItem>
       <FlyoutBase.AttachedFlyout>
         <Flyout>

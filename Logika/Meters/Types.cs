@@ -59,7 +59,8 @@ namespace Logika.Meters
         public string Name { get; }
         public string Acronym { get; } //буква соответствующая архиву, совпадает с обозначениями архивов табло у x4
         public string Description { get; }
-
+        
+        public TimeSpan Interval { get; }   //примерный интервал архивирования для интервальных архивов (для приблизительных расчётов прогресса чтения)
 
         static Dictionary<string, ArchiveType> atDict = new Dictionary<string, ArchiveType>(StringComparer.OrdinalIgnoreCase);
         public static ArchiveType[] All {
@@ -67,35 +68,36 @@ namespace Logika.Meters
                 return atDict.Values.ToArray();
             }
         }
-        private ArchiveType(string name, string description, ArchiveTimingType timingType, string acronym)
+        private ArchiveType(string name, string description, ArchiveTimingType timingType, string acronym, TimeSpan intvSpan)
         {            
             Name = name;
             Description = description;
             Timing = timingType;
             Acronym = acronym;
-            
+            Interval = intvSpan;
+
             atDict.Add(Name, this);
         }
         public bool VariableInterval { get; private set; } = false;
 
-        public static readonly ArchiveType Hour = new ArchiveType("Hour", "часовой архив", ArchiveTimingType.Synchronous, "Час");
-        public static readonly ArchiveType Day = new ArchiveType("Day", "суточный архив", ArchiveTimingType.Synchronous, "Сут");
-        public static readonly ArchiveType Decade = new ArchiveType("Decade", "декадный архив", ArchiveTimingType.Synchronous, "Дек");
-        public static readonly ArchiveType Month = new ArchiveType("Month", "месячный архив", ArchiveTimingType.Synchronous, "Мес");
+        public static readonly ArchiveType Hour = new ArchiveType("Hour", "часовой архив", ArchiveTimingType.Synchronous, "Час", new TimeSpan(1, 0, 0));
+        public static readonly ArchiveType Day = new ArchiveType("Day", "суточный архив", ArchiveTimingType.Synchronous, "Сут", new TimeSpan(1, 0, 0, 0));
+        public static readonly ArchiveType Decade = new ArchiveType("Decade", "декадный архив", ArchiveTimingType.Synchronous, "Дек", new TimeSpan(10, 0, 0, 0));
+        public static readonly ArchiveType Month = new ArchiveType("Month", "месячный архив", ArchiveTimingType.Synchronous, "Мес", new TimeSpan(30, 0, 0, 0));
         
-        public static readonly ArchiveType ParamsLog = new ArchiveType("ParamsLog", "изменения БД", ArchiveTimingType.Asynchronous, "Изм");
-        public static readonly ArchiveType PowerLog = new ArchiveType("PowerLog", "перерывы питания", ArchiveTimingType.Asynchronous, "Пит");
-        public static readonly ArchiveType ErrorsLog = new ArchiveType("ErrorsLog", "нештатные", ArchiveTimingType.Asynchronous, "НСа");
+        public static readonly ArchiveType ParamsLog = new ArchiveType("ParamsLog", "изменения БД", ArchiveTimingType.Asynchronous, "Изм", TimeSpan.Zero);
+        public static readonly ArchiveType PowerLog = new ArchiveType("PowerLog", "перерывы питания", ArchiveTimingType.Asynchronous, "Пит", TimeSpan.Zero);
+        public static readonly ArchiveType ErrorsLog = new ArchiveType("ErrorsLog", "нештатные", ArchiveTimingType.Asynchronous, "НСа", TimeSpan.Zero);
 
         //контрольный архив: интервал 1 сутки, только в тепловых приборах M4        
-        public static readonly ArchiveType Control = new ArchiveType("Control", "контрольный архив", ArchiveTimingType.Synchronous, "Контр");
+        public static readonly ArchiveType Control = new ArchiveType("Control", "контрольный архив", ArchiveTimingType.Synchronous, "Контр", new TimeSpan(1, 0, 0, 0));
 
         //специфика СПЕ542,543
-        public static readonly ArchiveType Minute = new ArchiveType("Minute", "минутный архив", ArchiveTimingType.Synchronous, "Мин") { VariableInterval = true };
-        public static readonly ArchiveType HalfHour = new ArchiveType("HalfHour", "[полу]часовой архив", ArchiveTimingType.Synchronous, "ПЧас") { VariableInterval = true };
+        public static readonly ArchiveType Minute = new ArchiveType("Minute", "минутный архив", ArchiveTimingType.Synchronous, "Мин", TimeSpan.Zero) { VariableInterval = true };
+        public static readonly ArchiveType HalfHour = new ArchiveType("HalfHour", "[полу]часовой архив", ArchiveTimingType.Synchronous, "ПЧас", TimeSpan.Zero) { VariableInterval = true };
 
-        public static readonly ArchiveType Turn = new ArchiveType("Turn", "сменный архив", ArchiveTimingType.Asynchronous, "См");
-        public static readonly ArchiveType Diags = new ArchiveType("DiagsLog", "диагностические", ArchiveTimingType.Asynchronous, "ДСа");   //x6x
+        public static readonly ArchiveType Turn = new ArchiveType("Turn", "сменный архив", ArchiveTimingType.Asynchronous, "См", TimeSpan.Zero);
+        public static readonly ArchiveType Diags = new ArchiveType("DiagsLog", "диагностические", ArchiveTimingType.Asynchronous, "ДСа", TimeSpan.Zero);   //x6x
 
         //static ArchiveType() {
         //    List<ArchiveType> la = new List<ArchiveType>();

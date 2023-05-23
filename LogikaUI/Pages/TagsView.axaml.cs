@@ -1,18 +1,18 @@
 using System;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using LogikaUI.ViewModels;
-using Npgsql;
 
 namespace LogikaUI.Pages;
 
-public partial class X6TagsView : UserControl
+public partial class TagsView : UserControl
 {
-    public X6TagsView()
+    public TagsView()
     {
         InitializeComponent();
-        DataContext = new X6TagsViewModel();
+        DataContext = new TagsViewModel();
     }
 
     private void InitializeComponent()

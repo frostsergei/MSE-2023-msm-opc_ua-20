@@ -9,6 +9,8 @@ namespace Logika.Utils
     {
         public static string MakeValidFileName(string name)
         {
+            if (name == null)
+                return "";
             string invalidChars = System.Text.RegularExpressions.Regex.Escape(new string(System.IO.Path.GetInvalidFileNameChars()));
             string invalidRegStr = string.Format(@"([{0}]*\.+$)|([{0}]+)", invalidChars);
 

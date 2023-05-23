@@ -40,17 +40,16 @@ namespace Logika.Comms.Connections
     }
 
     abstract public class Connection : IDisposable
-    {
-        //public readonly object owner;
+    {        
         public readonly string address;
 
         protected ManualResetEvent closingEvent;
 
-        public event Action busResetEvent;
-        protected void doBusReset()
+        public event Action busTrackerResetEvent;
+        protected void resetBusStateTracker()
         {
             System.Diagnostics.Debug.Print("resetting bus state");
-            busResetEvent.Invoke();
+            busTrackerResetEvent.Invoke();
         }
         
         public abstract void Dispose(bool Disposing);

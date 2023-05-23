@@ -9,6 +9,13 @@ using Logika.Meters;
 
 namespace Logika.Comms.Protocols.M4
 {
+
+    public enum M4_MeterChannel: byte {
+        SYS = 0,
+        TV1 = 1,
+        TV2 = 2,
+    }
+
     public partial class M4Protocol : Protocol
     {
         public const byte BROADCAST = 0xFF;   //NT для безадресных запросов
@@ -23,24 +30,66 @@ namespace Logika.Comms.Protocols.M4
 
         public const ushort PARTITION_CURRENT = 0xFFFF;
 
+        public const int ALT_SPEED_FALLBACK_TIME = 10000;
+
         public ushort ArchivePartition = PARTITION_CURRENT; //архивный раздел который будет читаться этим экземпляром протокола
 
-        BusState busState;
-        BaudRate? desiredBaudrate;
+        #region internally maintained bus state
+        class _busActivePtr {
+            public readonly Logika4 meter;
+            public readonly byte nt;
+            public readonly M4_MeterChannel tv;    //имеет значение только для 4L и только для записи параметров (тк запросы архивов 4L не поддерживаются)
+
+            public _busActivePtr(Logika4 mtr, byte nt, M4_MeterChannel tv)
+            {
+                if (mtr == null)
+                    throw new ArgumentException();
+                this.meter = mtr;
+                this.nt = nt;
+                this.tv = tv;
+            }
+
+            public DateTime lastIOTime;
+
+            public TimeSpan tsFromLastIO {
+                get { return DateTime.Now - lastIOTime; }
+            }
+
+            internal bool ioError;
+        }
+
+        _busActivePtr activeDev;
+
+        //public byte[] devReply;    //ответ прибора на запрос сеанса
 
         public override void ResetInternalBusState()
         {
-            busState = new BusState();
+            activeDev = null;
+            serialConnSpeedFallback();
+
+            Log(CommsLogLevel.Trace, "M4 bus state is reset");
         }
 
-        public M4Protocol(BaudRate? targetBaudrate = null)
+        #endregion
+
+        BaudRate initialBaudRate = BaudRate.Undefined;  //для соединений по COM порту с автоматическим поднятием скорости
+        BaudRate suggestedBaudrate = BaudRate.Undefined;
+
+        public BaudRate currentBaudRate {
+            get {
+                SerialConnection sc = connection as SerialConnection;                
+                return sc != null ? sc.BaudRate : BaudRate.Undefined;
+            }
+        }
+
+        public M4Protocol(BaudRate targetBaudrate = BaudRate.Undefined)
             : base()
         {
-            this.desiredBaudrate = targetBaudrate;            
+            this.suggestedBaudrate = targetBaudrate;
         }
 
         protected override void internalCloseCommSession(byte? notUsed, byte? nt)
-        {            
+        {
             //SendLegacyPacket(nt, M4Opcode.SessionClose, new byte[] { 0, 0, 0, 0 });
             DoLegacyRequest(nt, M4Opcode.SessionClose, new byte[] { 0, 0, 0, 0 }, 0, RecvFlags.DontThrowOnErrorReply);  //в зависимости от ответа bsu поправить также и старый пролог                                                 
         }
@@ -64,10 +113,10 @@ namespace Logika.Comms.Protocols.M4
                 connection.Write(WAKEUP_SEQUENCE, 0, WAKEUP_SEQUENCE.Length);
             }
         }
-        
+
 
         internal static byte[] genRawHandshake(byte? destNT)
-        {           
+        {
             byte[] hsArgs = new byte[] { 0, 0, 0, 0 };
             byte[] pBuf = new byte[3 + hsArgs.Length + 2];
 
@@ -87,71 +136,90 @@ namespace Logika.Comms.Protocols.M4
             return pBuf;
         }
 
+        void serialConnSpeedFallback()
+        {
+            var sc = connection as SerialConnection;
+            if (sc == null || initialBaudRate==BaudRate.Undefined)
+                return;
+            
+            if (sc.BaudRate != initialBaudRate) {
+                sc.BaudRate = initialBaudRate;
+                Log(CommsLogLevel.Debug, "восстановлена начальная скорость обмена " + (int)initialBaudRate + " bps");                
+            }
+        }
 
-        public byte[] SelectDeviceAndChannel(Logika4 mtr, byte? nt, byte? tv = null)
+        public void SelectDeviceAndChannel(Logika4 mtr, byte? zNt, M4_MeterChannel tv = M4_MeterChannel.SYS)
         {
             if (mtr == null)
                 throw new ArgumentException();
 
-            if (!nt.HasValue)
-                nt = BROADCAST;
-
-            //если прибор не выбран на шине,
-            //если обмен с прибором был больше N минут назад, FFы с принудительными паузами
-            if (busState.meter != null && (DateTime.Now - busState.lastIOTime).TotalSeconds > (busState.meter.SessionTimeout.TotalSeconds * 0.9)) {
-                busState.Reset();
-            }
-
-            //test if we're working at increased baudrate
-            if (busState.meter != null && busState.initialBaudRate != busState.currentBaudRate) {
-                //прибор восстанавливает скорость при отсутствии обмена в течение 10 с
-                if ((DateTime.Now - busState.lastIOTime).TotalSeconds > 9.8) {
-                    if (connection is SerialConnection)
-                        (connection as SerialConnection).BaudRate = busState.initialBaudRate.Value;
-                    busState.currentBaudRate = busState.initialBaudRate;
-                    System.Diagnostics.Debug.Print("восстановлена начальная скорость обмена " + busState.currentBaudRate + " bps");
+            byte nt = zNt.HasValue ? zNt.Value : BROADCAST;            
+#if DEBUG
+//Log(CommsLogLevel.Trace, $"M4.SelectDeviceAndChannel: selDev={activeDev.meter?.Caption}, active NT={(activeDev!=null ? Convert.ToString(activeDev.nt.Value) : "--")}, last IO was {(int)tsFromLastIO.TotalSeconds} seconds ago");
+#endif
+            //проверяем, не закончилась ли сессия в приборе по неактивности
+            if (activeDev != null && activeDev.tsFromLastIO > activeDev.meter.SessionTimeout) 
+                ResetInternalBusState();
+            
+            //менеджмент повышенных скоростей для serial соединений
+            if (connection is SerialConnection) {   
+                if (suggestedBaudrate!=BaudRate.Undefined && initialBaudRate==BaudRate.Undefined) {   
+                    initialBaudRate = ((SerialConnection)connection).BaudRate;
                 }
+                
+                //проверяем, не вывалился ли прибор из повышенной скорости (прибор сбрасывает скорость обмена при отсутствии обмена в течение 10 с )
+                if (activeDev != null && activeDev.tsFromLastIO.TotalMilliseconds >= ALT_SPEED_FALLBACK_TIME)
+                    serialConnSpeedFallback();
             }
 
-            if (!busState.activeNT.HasValue || (busState.activeNT.Value != nt.Value) ||  
-                (tv.HasValue && busState.selectedTV != tv) ) {   //выбор канала актуален только для 4L приборов, и только для записи параметров
+            //byte tvToSelect = tv.HasValue ? tv.Value : (byte)0;
 
-                bool alreadySelected = (busState.activeNT.HasValue && busState.activeNT == nt);
+            bool reselectRequired = activeDev == null || activeDev.nt != nt || activeDev.tv != tv || activeDev.ioError;
+            
+            if (reselectRequired) {   
 
-                //выдерживаем паузы между FFами и после них, только если устройство этого требует,
-                //и оно еще не активно
-                bool slowFFs = !mtr.SupportsFastSessionInit && !alreadySelected;                
-                M4Packet hsPkt = Handshake(nt, tv.HasValue ? tv.Value : (byte)0, slowFFs);
+                if (activeDev != null)
+                    activeDev.ioError = false;
 
-                Meter detectedType = Logika4.MeterTypeFromResponse(hsPkt.Data[0], hsPkt.Data[1], hsPkt.Data[2]);
-                //cntr.fwVersion = pkt.Data[2];
-                //Meter dm = MeterFactory.GetMeter(detectedType);
+                bool alreadyAwake = activeDev != null && activeDev.nt == nt;
+
+                //выдерживаем паузы между FFами и после них, только если устройство этого требует,                
+                bool slowFFs = !mtr.SupportsFastSessionInit && !alreadyAwake;
+                M4Packet hsPkt = Handshake(nt, (byte)tv, slowFFs);
+
+                Meter detectedType = Logika4.MeterTypeFromResponse(hsPkt.Data[0], hsPkt.Data[1], hsPkt.Data[2]);                
                 if (detectedType != mtr) {
-                    busState.Reset();
+                    ResetInternalBusState();
                     throw new ECommException(ExcSeverity.Stop, CommError.Unspecified, string.Format("Несоответствие типа прибора. Ожидаемый тип прибора: {0}, фактический: {1} (NT={2})", mtr.Caption, detectedType.Caption, nt));
                 }
-                busState.meter = mtr;
-                busState.devReply = hsPkt.Data;
-                if (connection is SerialConnection) {
-                    SerialConnection sc = connection as SerialConnection;
-                    busState.initialBaudRate = busState.currentBaudRate = (BaudRate)sc.BaudRate;
-                }
-
-                //устанавливаем повышенную скорость обмена
-                if (desiredBaudrate.HasValue && connection is SerialConnection) {
-                    //CCounter cct = cntr.cfgNode as CCounter;
-                    if (busState.currentBaudRate != desiredBaudrate.Value)
-                        SetBusSpeed(busState.meter, nt, desiredBaudrate.Value);
+                
+                activeDev = new _busActivePtr(mtr, nt, tv);
+                activeDev.lastIOTime = DateTime.Now;
+                //devReply = hsPkt.Data;
+            }
+            
+        retryHS:        //устанавливаем другую (обычно повышенную :) скорость обмена
+            if (connection is SerialConnection && suggestedBaudrate!=BaudRate.Undefined && currentBaudRate != suggestedBaudrate) {
+                bool spdAlteredOk = SetBusSpeed(activeDev.meter, nt, suggestedBaudrate, tv);
+                if (!spdAlteredOk) {
+                    //у некоторых M4 приборов (941.20, 944, 742? прочие?) встречается несовместимость, не позволяющая нормально работать на максимальной скорости 57600 через АПС71
+                    if (mtr is Logika4M && (int)suggestedBaudrate >= 57600) {
+                        suggestedBaudrate = BaudRate.b38400;
+                        goto retryHS;
+                    }
+                    //также, 942 поддерживает 9600 только на оптическом интерфейсе, на проводном - только 2400
+                    suggestedBaudrate = BaudRate.Undefined; //далее работаем только на начальной скорости
                 }
             }
 
-            return busState.devReply;
+            //return devReply;
         }
 
-        public override Meter GetMeterType(byte? srcNT, byte? dstNT)
+        public override Meter GetMeterType(byte? srcNT, byte? dstNT, out object xtraData)
         {
-            M4Packet hsPkt = Handshake(dstNT, 0, false);            
-            return Logika4.MeterTypeFromResponse(hsPkt.Data[0], hsPkt.Data[1], hsPkt.Data[2]); 
+            M4Packet hsPkt = Handshake(dstNT, 0, false);
+            xtraData = hsPkt.Data[2];   //версия прибора
+            return Logika4.MeterTypeFromResponse(hsPkt.Data[0], hsPkt.Data[1], hsPkt.Data[2]);
         }
 
         //----------------------------------------------------------------------------------------------
@@ -159,8 +227,8 @@ namespace Logika.Comms.Protocols.M4
 
         public M4Packet Handshake(byte? nt, byte channel, bool bSlowFFs)
         {
-            if (nt != busState.activeNT)
-                busState.Reset();
+            if (activeDev!=null && nt != activeDev.nt)
+                ResetInternalBusState();
 
             SendAttention(bSlowFFs);
             Wait(WAKE_SESSION_DELAY);   //пауза обязательна для АДС99 в режиме TCP сервер, без неё он всячески таймаутится, остальным приборам +/- всё равно
@@ -168,17 +236,11 @@ namespace Logika.Comms.Protocols.M4
             connection.PurgeComms(PurgeFlags.RX);
 
             byte[] reqData = new byte[] { channel, 0, 0, 0 };
-            M4Packet response = DoLegacyRequest(nt, M4Opcode.Handshake, reqData, 3);
-           
-            busState.activeNT = response.NT;
-            busState.selectedTV = channel;
-            busState.lastIOTime = DateTime.Now;
-                
-            return response;
+            return DoLegacyRequest(nt, M4Opcode.Handshake, reqData, 3);            
         }
-        
+
         M4Packet DoLegacyRequest(byte? nt, M4Opcode reqFunc, byte[] data, int expectedDataLen, RecvFlags flags = 0)
-        {            
+        {
             SendLegacyPacket(nt, reqFunc, data);
             return RecvPacket(nt, reqFunc, null, expectedDataLen, flags);
         }
@@ -202,42 +264,42 @@ namespace Logika.Comms.Protocols.M4
         //----------------------------------------------------------------------------------------------
         //should receive both legacy and extended packets. RC4 encryption (some legacy devs) is not supported
         public M4Packet RecvPacket(byte? expectedNT, M4Opcode? expectedOpcode, byte? expectedId, int expectedDataLength, RecvFlags flags = 0)
-        {            
+        {
             byte[] buf = new byte[8];
             byte[] check = new byte[2];
-        
+
             M4Packet p = new M4Packet();
             try {
-        resyncFrame:
+            resyncFrame:
                 DateTime readStartTime = DateTime.Now;
                 while (true) { //read byte stream, until frame start found or timeout elapses
-                    
+
                     cancellationToken.ThrowIfCancellationRequested();
-                    
+
                     connection.Read(buf, 0, 1);
-                    if (buf[0] == M4Protocol.FRAME_START)                         
-                        break;                    
+                    if (buf[0] == M4Protocol.FRAME_START)
+                        break;
 
                     TimeSpan Elapsed = DateTime.Now - readStartTime;
                     if (Elapsed.TotalMilliseconds > connection.ReadTimeout) {
-                        busState.Reset();         //force session re-establish
+                        onRecoverableError(); //ResetInternalBusState();         //force session re-establish
                         throw new ECommException(ExcSeverity.Error, CommError.Timeout);
                     }
                 }
                 connection.Read(buf, 1, 2); //read NT and function code                
                 p.NT = buf[1];
                 p.FunctionCode = (M4Opcode)buf[2];
-                
+
                 //это может быть как ответ другого прибора (очень маловероятно), так и случайная синхронизация по 0x10 в потоке данных
-                if (expectedNT.HasValue && p.NT != expectedNT.Value)  
+                if (expectedNT.HasValue && p.NT != expectedNT.Value)
                     goto resyncFrame;
 
                 //либо задержавшийся в буферах устройств связи ответ на предыдущий запрос(наиболее вероятно), либо случайно случившиеся в потоке 10 NT(маловероятно), либо ответ другого прибора(крайне маловероятно)
                 if (expectedOpcode.HasValue && p.FunctionCode != expectedOpcode.Value && p.FunctionCode != M4Opcode.Error && (byte)p.FunctionCode != EXT_PROTO) {
                     if (expectedOpcode == M4Opcode.ReadFlash) {   //для многостраничного чтения Flash ошибки в приеме последовательности пакетов недопустимы, поэтому никаких переприёмов.
-                        busState.Reset();
+                        onRecoverableError();    //ResetInternalBusState();
                         throw new ECommException(ExcSeverity.Error, CommError.Unspecified, "нарушение последовательности обмена");
-                    } 
+                    }
                     goto resyncFrame;
                 }
 
@@ -250,10 +312,10 @@ namespace Logika.Comms.Protocols.M4
                     int payload_len = buf[5] + (buf[6] << 8);
                     p.Data = new byte[payload_len - 1];   //payload = opcode + data
                     p.FunctionCode = (M4Opcode)buf[7];
-                    if (expectedOpcode.HasValue && p.FunctionCode != expectedOpcode.Value && p.FunctionCode!=M4Opcode.Error)
+                    if (expectedOpcode.HasValue && p.FunctionCode != expectedOpcode.Value && p.FunctionCode != M4Opcode.Error)
                         goto resyncFrame;
 
-                    if (expectedId.HasValue && p.ID != expectedId.Value) {                        
+                    if (expectedId.HasValue && p.ID != expectedId.Value) {
                         Log(CommsLogLevel.Warn, string.Format("нарушение порядка обмена: ожидаемый ID пакета: 0x{0:X2}, принятый: 0x{1:X2}", expectedId.Value, p.ID));
                         goto resyncFrame;
                     }
@@ -272,10 +334,12 @@ namespace Logika.Comms.Protocols.M4
                     p.Check = (ushort)((check[0] << 8) | check[1]);   //MSB first
                 else
                     p.Check = (ushort)(check[0] | (check[1] << 8));  //also check END_OF_FRAME byte (0x16)
-                busState.lastIOTime = DateTime.Now;
                 
-            } catch (Exception) {
-                busState.Reset();    //re-establish device link on next attempt
+                if (activeDev!=null)
+                    activeDev.lastIOTime = DateTime.Now;
+
+            } catch (Exception) {                
+                onRecoverableError();
                 throw;
             }
 
@@ -299,31 +363,63 @@ namespace Logika.Comms.Protocols.M4
                 ErrorCode ec = (ErrorCode)p.Data[0];
 
                 reportProtoEvent(ProtoEvent.genericError);
-                if (flags.HasFlag(RecvFlags.DontThrowOnErrorReply)==false)
+                if (flags.HasFlag(RecvFlags.DontThrowOnErrorReply) == false)
                     throw new ECommException(ExcSeverity.Error, CommError.Unspecified, string.Format("прибор вернул код ошибки: {0}", (int)ec));
             }
 
-            return p;            
+            return p;
         }
 
         //----------------------------------------------------------------------------------------------
-        public void SetBusSpeed(Logika4 mtr, byte? nt, BaudRate baudRate)
-        {            
-            //                       0     1     2     3      4      5       6
-            int[] fdvBaudRates = { 2400, 4800, 9600, 19200, 38400, 57600, 115200 };
-            int nbr = Array.IndexOf(fdvBaudRates, (int)baudRate);
+        public bool SetBusSpeed(Logika4 mtr, byte? nt, BaudRate baudRate, M4_MeterChannel tv)
+        {
+            SerialConnection serialConn = connection as SerialConnection;
+            if (serialConn == null)
+                throw new Exception("смена скорости недопустима на соединениях отличных от 'Serial'");
+
+            //                    0     1     2     3      4      5      6
+            int[] m4BaudRates = { 2400, 4800, 9600, 19200, 38400, 57600, 115200 };
+            int nbr = Array.IndexOf(m4BaudRates, (int)baudRate);
             if (nbr < 0)
                 throw new ECommException(ExcSeverity.Stop, CommError.Unspecified, "запрошенная скорость обмена не поддерживается");
 
-            M4Packet rsp = DoLegacyRequest(nt, M4Opcode.SetSpeed, new byte[4] { (byte)nbr, 0, 0, 0 }, 0);
+            BaudRate prevBaudRate = serialConn.BaudRate;
+            bool changedOk = false;
+            bool devAcksNewBR = false;
+            Log(CommsLogLevel.Info, $"установка скорости обмена {(int)baudRate} bps");
+            try {
+                M4Packet rsp = DoLegacyRequest(nt, M4Opcode.SetSpeed, new byte[4] { (byte)nbr, 0, 0, 0 }, 0, RecvFlags.DontThrowOnErrorReply);               
+                if (rsp.FunctionCode == M4Opcode.SetSpeed) {
+                    devAcksNewBR = true;
+                    Wait(250);
+                    connection.PurgeComms(PurgeFlags.RX | PurgeFlags.TX);
 
-            (connection as SerialConnection).BaudRate = baudRate;
-            busState.currentBaudRate = baudRate;
+                    //проверяем, отвечает ли прибор на новой скорости
+                    serialConn.BaudRate = baudRate;
+                    rsp = DoLegacyRequest(nt, M4Opcode.Handshake, new byte[4] { (byte)tv, 0, 0, 0 }, 3, RecvFlags.DontThrowOnErrorReply);
+                    changedOk = rsp.FunctionCode == M4Opcode.Handshake;
+                    
+                    //Log(CommsLogLevel.Info, "Установлена скорость обмена " + (int)busState.currentBaudRate + " bps");
+                }
 
-            Wait(250);
-            connection.PurgeComms(PurgeFlags.RX | PurgeFlags.TX);
-
-            Log(CommsLogLevel.Info, "установлена скорость обмена " + (int)baudRate + " bps");            
+            } catch (ECommException ece) {
+                if (ece.Reason != CommError.Timeout && ece.Reason!=CommError.Checksum)
+                    throw;
+                changedOk = false;                
+            } 
+            
+            if (!changedOk) {
+                string msg = $"ошибка";
+                if (devAcksNewBR)
+                    msg += ", восстанавливаем предыдущую скорость обмена...";
+                Log(CommsLogLevel.Warn, msg);
+                serialConn.BaudRate = prevBaudRate;
+                if (devAcksNewBR) {                    
+                    Wait((int)(ALT_SPEED_FALLBACK_TIME * 1.1));
+                    Log(CommsLogLevel.Info, $"восстановлена скорость обмена {(int)prevBaudRate} bps");
+                }
+            }
+            return changedOk;
         }        
 
         #endregion
@@ -377,7 +473,7 @@ namespace Logika.Comms.Protocols.M4
                     nParam = mappedOrdinal.Value;
             }
 
-            SelectDeviceAndChannel(mtr, nt, channel); //переключить активный канал
+            SelectDeviceAndChannel(mtr, nt, (M4_MeterChannel)channel); //переключить активный канал
             if (channel == 1 || channel == 2) //при записи указывается относительный номер параметра по каналу
                 nParam -= 50;
 
@@ -482,7 +578,8 @@ namespace Logika.Comms.Protocols.M4
                         pkt = RecvPacket(nt, M4Opcode.ReadFlash, null, Logika4L.FLASH_PAGE_SIZE);
                     } catch {
                         if (pageCount > 1)  //при ошибке в многостраничных запросах флеша - пересинхронизируем поток чтения, чтобы не словить опоздавшую страницу с другим адресом
-                            busState.Reset();   //будет запрошен хендшейк
+                            onRecoverableError();    //ResetInternalBusState();   //будет запрошен хендшейк
+                        
                         throw;
                     }
                     if (pkt.FunctionCode != M4Opcode.ReadFlash || pkt.Data.Length != Logika4L.FLASH_PAGE_SIZE)
@@ -493,6 +590,12 @@ namespace Logika.Comms.Protocols.M4
             }
 
             return retbuf;
+        }
+
+        void onRecoverableError()
+        {
+            if (activeDev != null)
+                activeDev.ioError = true;
         }
 
         //----------------------------------------------------------------------------------------------
@@ -875,28 +978,4 @@ namespace Logika.Comms.Protocols.M4
         #endregion
     }
 
-    public class BusState
-    {
-        public byte? activeNT = null;
-        public Logika4 meter;
-        public byte? selectedTV;    //имеет значение только для 4L и только для записи параметров (тк запросы архивов 4L не поддерживаются)
-        public byte[] devReply;    //ответ прибора на запрос сеанса
-        public BaudRate? initialBaudRate;
-        public BaudRate? currentBaudRate;
-        public DateTime lastIOTime;
-        public void Reset()
-        {
-            meter = null;
-            activeNT = null;
-            selectedTV = null;
-            devReply = null;
-            initialBaudRate = null;
-            currentBaudRate = null;
-            lastIOTime = DateTime.MinValue;
-        }
-        public BusState()
-        {
-            Reset();
-        }
-    }
 }

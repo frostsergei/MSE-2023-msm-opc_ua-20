@@ -15,36 +15,45 @@
         <viewModels:DevicesViewModel/>
     </Design.DataContext>
     <DockPanel>
-        <Button DockPanel.Dock="Bottom"
-                Command="{Binding LoadDevices}">Load devices</Button>
+        <Button DockPanel.Dock="Bottom">Load devices</Button>
         <Border
             Margin="10"
             CornerRadius="10">
                 <Grid>
                     <DataGrid
                         Name="MainTable"
-                        SelectionChanged="DataGrid_OnSelectionChanged"
+                        DoubleTapped="MainTable_OnDoubleTapped"
                         Items="{Binding Devices} ">
                         <DataGrid.Columns>
-                            <DataGridTextColumn 
+                            <DataGridTextColumn
                                 IsReadOnly="True"
-                                Header="ID" 
-                                Binding="{Binding Id}">
+                                Header="Caption"
+                                Binding="{Binding Caption}">
                             </DataGridTextColumn>
                             <DataGridTextColumn
                                 IsReadOnly="True"
-                                Header="Name" 
-                                Binding="{Binding Name}">
+                                Header="MeasureKind"
+                                Binding="{Binding MeasureKind}">
                             </DataGridTextColumn>
                             <DataGridTextColumn
                                 IsReadOnly="True"
-                                Header="Description" 
-                                Binding="{Binding Description}">
+                                Header="MaxChannels"
+                                Binding="{Binding MaxChannels}">
                             </DataGridTextColumn>
                             <DataGridTextColumn
                                 IsReadOnly="True"
-                                Header="Type" 
-                                Binding="{Binding Type}">
+                                Header="MaxGroups"
+                                Binding="{Binding MaxGroups}">
+                            </DataGridTextColumn>
+                            <DataGridTextColumn
+                                IsReadOnly="True"
+                                Header="SupportedByProlog4"
+                                Binding="{Binding SupportedByProlog4}">
+                            </DataGridTextColumn>
+                            <DataGridTextColumn
+                                IsReadOnly="True"
+                                Header="Outdated"
+                                Binding="{Binding Outdated}">
                             </DataGridTextColumn>
                         </DataGrid.Columns>
                     </DataGrid>

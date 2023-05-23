@@ -22,9 +22,9 @@ namespace Logika.Comms.Protocols
             get { return cn; }
             set {
                 if (value != null) {
-                    value.busResetEvent += ResetInternalBusState;
+                    value.busTrackerResetEvent += ResetInternalBusState;
                 } else if (cn != null)
-                    cn.busResetEvent -= ResetInternalBusState;
+                    cn.busTrackerResetEvent -= ResetInternalBusState;
                 cn = value;
             }
         }
@@ -449,7 +449,7 @@ namespace Logika.Comms.Protocols
             }
         }
 
-        public abstract Meter GetMeterType(byte? srcNT, byte? dstNT);
+        public abstract Meter GetMeterType(byte? srcNT, byte? dstNT, out object xtraInfo);
         public abstract DateTime GetDeviceClock(Meter meter, byte? src, byte? dst);
         public abstract void UpdateTags(byte? src, byte? dst, DataTag[] tags);
 

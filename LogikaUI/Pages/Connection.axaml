@@ -21,9 +21,8 @@
                 Height="60"
                 VerticalContentAlignment="Center"
                 HorizontalContentAlignment="Center"
-                Command="{Binding Connect}">
-            Connect
-        </Button>
+                Command="{Binding Connect}"
+                Content="{Binding ButtonText}" />
         <Border
             IsVisible="{Binding !IsConnected}">
             <StackPanel
@@ -48,12 +47,17 @@
                     <DataGrid
                         Name="MainTable"
                         SelectionChanged="DataGrid_OnSelectionChanged"
-                        Items="{Binding Devices} ">
+                        Items="{Binding Tags}">
                         <DataGrid.Columns>
-                            <DataGridTextColumn 
+                            <DataGridTextColumn
                                 IsReadOnly="True"
-                                Header="ID" 
+                                Header="ID"
                                 Binding="{Binding Id}">
+                            </DataGridTextColumn>
+                            <DataGridTextColumn
+                                IsReadOnly="True"
+                                Header="Value"
+                                Binding="{Binding Value}">
                             </DataGridTextColumn>
                         </DataGrid.Columns>
                     </DataGrid>
